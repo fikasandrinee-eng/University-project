@@ -1,10 +1,10 @@
 const path = require('path');
 const dotenv = require('dotenv');
 
-// Load environment variables from process cwd, backend directory, and root directory
-dotenv.config();
+// Load environment variables prioritizing backend directory, then root directory
 dotenv.config({ path: path.join(__dirname, '.env') });
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
+dotenv.config();
 
 // Provide safe development fallback for JWT_SECRET if missing
 if (!process.env.JWT_SECRET) {
@@ -49,26 +49,48 @@ const PORT = process.env.PORT || 5000;
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
-app.use(cors({
+
+const defaultAllowedOrigins = [
+  'https://university-project-r1ey.vercel.app',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+];
+
+const envOrigins = (process.env.FRONTEND_URL || '')
+  .split(',')
+  .map(o => o.trim())
+  .filter(Boolean);
+
+const allowedOrigins = Array.from(new Set([...defaultAllowedOrigins, ...envOrigins])).map(
+  url => url.replace(/\/+$/, '')
+);
+
+const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (e.g. curl, mobile apps)
+    // Allow requests with no origin (e.g. curl, mobile apps, server-to-server)
     if (!origin) return callback(null, true);
-    const allowed = [
-      'http://localhost:5173',
-      'http://127.0.0.1:5173',
-      'http://localhost:3000',
-      'http://127.0.0.1:3000',
-      process.env.FRONTEND_URL,
-    ].filter(Boolean);
-    if (allowed.includes(origin)) return callback(null, true);
+    const normalized = origin.replace(/\/+$/, '');
+    if (allowedOrigins.includes(normalized)) {
+      return callback(null, true);
+    }
     // In development allow any origin
-    if (process.env.NODE_ENV !== 'production') return callback(null, true);
-    return callback(new Error('Not allowed by CORS'));
+    if (process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+    console.warn(`[CORS] Request blocked from origin: ${origin}`);
+    return callback(null, false);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Content-Disposition'],
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 

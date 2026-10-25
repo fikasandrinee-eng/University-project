@@ -55,10 +55,14 @@ const login = async (req, res, next) => {
     const token = generateToken(user);
 
     const { password: _, ...userWithoutPassword } = user;
+    const userPayload = {
+      ...userWithoutPassword,
+      name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email,
+    };
 
     return successResponse(
       res,
-      { token, user: userWithoutPassword },
+      { token, user: userPayload },
       'Login successful.'
     );
   } catch (err) {
@@ -89,7 +93,12 @@ const getMe = async (req, res, next) => {
       return errorResponse(res, 'User not found.', 404);
     }
 
-    return successResponse(res, rows[0], 'User profile retrieved.');
+    const userProfile = {
+      ...rows[0],
+      name: `${rows[0].first_name || ''} ${rows[0].last_name || ''}`.trim() || rows[0].email,
+    };
+
+    return successResponse(res, userProfile, 'User profile retrieved.');
   } catch (err) {
     next(err);
   }
@@ -230,11 +239,16 @@ const registerAdmin = async (req, res, next) => {
       [userResult.insertId]
     );
 
-    const token = generateToken(newUser[0]);
+    const adminUser = {
+      ...newUser[0],
+      name: `${newUser[0].first_name || ''} ${newUser[0].last_name || ''}`.trim() || newUser[0].email,
+    };
+
+    const token = generateToken(adminUser);
 
     return successResponse(
       res,
-      { token, user: newUser[0] },
+      { token, user: adminUser },
       'Administrator registered successfully.',
       201
     );

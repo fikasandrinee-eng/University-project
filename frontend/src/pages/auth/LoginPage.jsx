@@ -28,9 +28,16 @@ const LoginPage = () => {
 
     try {
       setIsLoading(true);
-      await login(email.trim(), password);
-      const from = location.state?.from?.pathname || '/dashboard';
-      navigate(from, { replace: true });
+      await login(email.trim(), password, rememberMe);
+      const targetFrom = location.state?.from?.pathname;
+      const destination =
+        targetFrom &&
+        !targetFrom.startsWith('/login') &&
+        !targetFrom.startsWith('/access-denied') &&
+        targetFrom.startsWith('/')
+          ? targetFrom
+          : '/dashboard';
+      navigate(destination, { replace: true });
     } catch (err) {
       setError(err.message || 'Incorrect email or password. Please check your information and try again.');
     } finally {

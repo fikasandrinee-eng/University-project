@@ -26,7 +26,7 @@ import {
   X,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { formatRole } from '../../utils/formatters';
+import { formatRole, getMediaUrl } from '../../utils/formatters';
 
 const navItems = {
   student: [
@@ -111,10 +111,13 @@ const SidebarLink = ({ to, icon: Icon, label, collapsed }) => (
   </NavLink>
 );
 
-const Sidebar = ({ isOpen, onClose }) => {
+const Sidebar = ({ isOpen, onClose, mobileOpen, onMobileClose }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
+
+  const isDrawerOpen = isOpen ?? mobileOpen ?? false;
+  const handleDrawerClose = onClose || onMobileClose || (() => {});
 
   const links = navItems[user?.role] || navItems.student;
 
@@ -127,13 +130,13 @@ const Sidebar = ({ isOpen, onClose }) => {
     <>
       {/* Mobile overlay */}
       <AnimatePresence>
-        {isOpen && (
+        {isDrawerOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-20 bg-black/50 lg:hidden"
-            onClick={onClose}
+            onClick={handleDrawerClose}
           />
         )}
       </AnimatePresence>
@@ -148,7 +151,7 @@ const Sidebar = ({ isOpen, onClose }) => {
           bg-gradient-to-b from-[#0F2456] to-[#1E3A8A]
           shadow-2xl
           lg:relative lg:translate-x-0
-          ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          ${isDrawerOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
           transition-transform duration-300 ease-in-out
         `}
       >
@@ -174,7 +177,7 @@ const Sidebar = ({ isOpen, onClose }) => {
           </AnimatePresence>
           {/* Mobile close */}
           <button
-            onClick={onClose}
+            onClick={handleDrawerClose}
             className="ml-auto lg:hidden text-slate-400 hover:text-white p-1"
           >
             <X className="w-5 h-5" />
@@ -206,7 +209,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                 <div className="w-8 h-8 rounded-full overflow-hidden bg-primary-hover flex items-center justify-center flex-shrink-0 border border-white/20">
                   {user?.avatar ? (
                     <img
-                      src={user.avatar.startsWith('http') ? user.avatar : `http://localhost:5000${user.avatar}`}
+                      src={getMediaUrl(user.avatar)}
                       alt={user.first_name || user.name || 'User'}
                       className="w-full h-full object-cover"
                     />

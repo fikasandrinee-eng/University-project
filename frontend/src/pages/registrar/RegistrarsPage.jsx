@@ -20,6 +20,7 @@ import { useToast } from '../../hooks/useToast';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import { getMediaUrl } from '../../utils/formatters';
 
 const RegistrarsPage = () => {
   const toast = useToast();
@@ -246,7 +247,7 @@ const RegistrarsPage = () => {
                       <div className="w-9 h-9 rounded-full overflow-hidden bg-darkblue flex items-center justify-center text-white font-bold flex-shrink-0 border border-border">
                         {reg.avatar ? (
                           <img
-                            src={reg.avatar.startsWith('http') ? reg.avatar : `http://localhost:5000${reg.avatar}`}
+                            src={getMediaUrl(reg.avatar)}
                             alt={reg.first_name}
                             className="w-full h-full object-cover"
                           />

@@ -23,7 +23,7 @@ import Input from '../../components/ui/Input';
 
 const RegisterAdminPage = () => {
   const navigate = useNavigate();
-  const { setUser } = useAuth();
+  const { setAuth, setUser } = useAuth();
   const toast = useToast();
 
   // Step 1: Security Gate (PIN/Password), Step 2: Registration Form
@@ -123,11 +123,11 @@ const RegisterAdminPage = () => {
       const resData = res?.data || res;
 
       if (resData?.token && resData?.user) {
-        sessionStorage.setItem('ums_token', resData.token);
-        sessionStorage.setItem('ums_user', JSON.stringify(resData.user));
-        localStorage.removeItem('ums_token');
-        localStorage.removeItem('ums_user');
-        if (setUser) setUser(resData.user);
+        if (setAuth) {
+          setAuth(resData.token, resData.user, true);
+        } else if (setUser) {
+          setUser(resData.user);
+        }
         toast.success('Administrator account registered and authenticated!');
         navigate('/dashboard', { replace: true });
       } else {

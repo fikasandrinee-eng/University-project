@@ -8,6 +8,7 @@ import { Camera } from 'lucide-react';
 import { departmentService } from '../../services/departmentService';
 import { programmeService } from '../../services/programmeService';
 import { roomService } from '../../services/roomService';
+import { getMediaUrl } from '../../utils/formatters';
 
 const StudentForm = ({ initialData, onSubmit, isLoading }) => {
   const navigate = useNavigate();
@@ -36,9 +37,7 @@ const StudentForm = ({ initialData, onSubmit, isLoading }) => {
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(
     initialData?.avatar || initialData?.profile_photo
-      ? ((initialData.avatar || initialData.profile_photo).startsWith('http')
-          ? (initialData.avatar || initialData.profile_photo)
-          : `http://localhost:5000${initialData.avatar || initialData.profile_photo}`)
+      ? getMediaUrl(initialData.avatar || initialData.profile_photo)
       : null
   );
 

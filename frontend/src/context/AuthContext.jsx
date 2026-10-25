@@ -3,8 +3,26 @@ import { authService } from '../services/authService';
 
 export const AuthContext = createContext(null);
 
+const normalizeUser = (u) => {
+  if (!u) return null;
+  const fullName = [u.first_name, u.last_name].filter(Boolean).join(' ');
+  return {
+    ...u,
+    name: u.name || fullName || u.email,
+  };
+};
+
+const getStoredUser = () => {
+  try {
+    const raw = sessionStorage.getItem('ums_user') || localStorage.getItem('ums_user');
+    return raw ? normalizeUser(JSON.parse(raw)) : null;
+  } catch {
+    return null;
+  }
+};
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(getStoredUser);
   const [isLoading, setIsLoading] = useState(true);
   const [token, setToken] = useState(() => sessionStorage.getItem('ums_token') || localStorage.getItem('ums_token'));
 
@@ -19,6 +37,23 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const setAuth = useCallback((newToken, userData, remember = true) => {
+    if (newToken && userData) {
+      const normalized = normalizeUser(userData);
+      sessionStorage.setItem('ums_token', newToken);
+      sessionStorage.setItem('ums_user', JSON.stringify(normalized));
+      if (remember) {
+        localStorage.setItem('ums_token', newToken);
+        localStorage.setItem('ums_user', JSON.stringify(normalized));
+      } else {
+        localStorage.removeItem('ums_token');
+        localStorage.removeItem('ums_user');
+      }
+      setToken(newToken);
+      setUser(normalized);
+    }
+  }, []);
+
   // Load user from stored token on mount
   useEffect(() => {
     const initAuth = async () => {
@@ -28,18 +63,21 @@ export const AuthProvider = ({ children }) => {
         if (decoded && decoded.exp * 1000 > Date.now()) {
           try {
             const res = await authService.getProfile();
-            const userData = res.data || res;
+            const userData = normalizeUser(res.data || res);
             setUser(userData);
             setToken(storedToken);
             sessionStorage.setItem('ums_token', storedToken);
             sessionStorage.setItem('ums_user', JSON.stringify(userData));
-          } catch {
-            sessionStorage.removeItem('ums_token');
-            sessionStorage.removeItem('ums_user');
-            localStorage.removeItem('ums_token');
-            localStorage.removeItem('ums_user');
-            setToken(null);
-            setUser(null);
+          } catch (err) {
+            // Only clear session if token is explicitly rejected (401)
+            if (err?.response?.status === 401 || err?.status === 401) {
+              sessionStorage.removeItem('ums_token');
+              sessionStorage.removeItem('ums_user');
+              localStorage.removeItem('ums_token');
+              localStorage.removeItem('ums_user');
+              setToken(null);
+              setUser(null);
+            }
           }
         } else {
           sessionStorage.removeItem('ums_token');
@@ -47,6 +85,7 @@ export const AuthProvider = ({ children }) => {
           localStorage.removeItem('ums_token');
           localStorage.removeItem('ums_user');
           setToken(null);
+          setUser(null);
         }
       }
       setIsLoading(false);
@@ -54,20 +93,13 @@ export const AuthProvider = ({ children }) => {
     initAuth();
   }, []);
 
-  const login = useCallback(async (email, password) => {
+  const login = useCallback(async (email, password, remember = true) => {
     const response = await authService.login(email, password);
     const payload = response.data || response;
     const { token: newToken, user: userData } = payload;
-    // Store in sessionStorage so each browser tab has completely independent login sessions
-    sessionStorage.setItem('ums_token', newToken);
-    sessionStorage.setItem('ums_user', JSON.stringify(userData));
-    // Clear localStorage to prevent cross-tab session contamination
-    localStorage.removeItem('ums_token');
-    localStorage.removeItem('ums_user');
-    setToken(newToken);
-    setUser(userData);
-    return userData;
-  }, []);
+    setAuth(newToken, userData, remember);
+    return normalizeUser(userData);
+  }, [setAuth]);
 
   const logout = useCallback(() => {
     sessionStorage.removeItem('ums_token');
@@ -89,7 +121,8 @@ export const AuthProvider = ({ children }) => {
         isLoading,
         login,
         logout,
-        setUser,
+        setAuth,
+        setUser: (u) => setUser(normalizeUser(u)),
       }}
     >
       {children}

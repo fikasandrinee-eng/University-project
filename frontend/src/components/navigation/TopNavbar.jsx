@@ -6,7 +6,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useContext } from 'react';
 import { ThemeContext } from '../../context/ThemeContext';
 import { notificationService } from '../../services/notificationService';
-import { formatRole } from '../../utils/formatters';
+import { formatRole, getMediaUrl } from '../../utils/formatters';
 
 const TopNavbar = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
@@ -90,7 +90,7 @@ const TopNavbar = ({ onMenuClick }) => {
               <div className="w-8 h-8 rounded-full overflow-hidden bg-primary flex items-center justify-center flex-shrink-0 border border-border">
                 {user?.avatar ? (
                   <img
-                    src={user.avatar.startsWith('http') ? user.avatar : `http://localhost:5000${user.avatar}`}
+                    src={getMediaUrl(user.avatar)}
                     alt={user.first_name || user.name || 'User'}
                     className="w-full h-full object-cover"
                   />

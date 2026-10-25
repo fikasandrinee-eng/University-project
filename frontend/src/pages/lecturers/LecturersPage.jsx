@@ -11,6 +11,7 @@ import { authService } from '../../services/authService';
 import { useToast } from '../../hooks/useToast';
 import Badge from '../../components/ui/Badge';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import { getMediaUrl } from '../../utils/formatters';
 
 const EMPTY_FORM = {
   first_name: '', last_name: '', email: '', password: '',
@@ -92,9 +93,7 @@ export default function LecturersPage() {
     setFormErrors({});
     setShowPassword(false);
     setPhotoFile(null);
-    const existingAvatar = lec.avatar
-      ? (lec.avatar.startsWith('http') ? lec.avatar : `http://localhost:5000${lec.avatar}`)
-      : null;
+    const existingAvatar = lec.avatar ? getMediaUrl(lec.avatar) : null;
     setPhotoPreview(existingAvatar);
     setShowModal(true);
   };
@@ -266,9 +265,7 @@ export default function LecturersPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {lecturers.length > 0 ? lecturers.map(l => {
-                  const avatarSrc = l.avatar
-                    ? (l.avatar.startsWith('http') ? l.avatar : `http://localhost:5000${l.avatar}`)
-                    : null;
+                  const avatarSrc = l.avatar ? getMediaUrl(l.avatar) : null;
                   return (
                     <motion.tr
                       key={l.id}

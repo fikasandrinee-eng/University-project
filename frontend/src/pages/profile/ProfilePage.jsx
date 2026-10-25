@@ -22,6 +22,7 @@ import { authService } from '../../services/authService';
 import { useToast } from '../../hooks/useToast';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
+import { getMediaUrl } from '../../utils/formatters';
 
 const ProfilePage = () => {
   const { user, setUser } = useAuth();
@@ -121,7 +122,7 @@ const ProfilePage = () => {
 
   const handleDownloadPhoto = () => {
     if (!user?.avatar) return;
-    const fullUrl = user.avatar.startsWith('http') ? user.avatar : `http://localhost:5000${user.avatar}`;
+    const fullUrl = getMediaUrl(user.avatar);
     const link = document.createElement('a');
     link.href = fullUrl;
     link.download = `${user.first_name || 'profile'}_photo.jpg`;
@@ -162,9 +163,7 @@ const ProfilePage = () => {
     }
   };
 
-  const avatarSrc = user?.avatar
-    ? (user.avatar.startsWith('http') ? user.avatar : `http://localhost:5000${user.avatar}`)
-    : null;
+  const avatarSrc = user?.avatar ? getMediaUrl(user.avatar) : null;
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">

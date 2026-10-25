@@ -22,6 +22,7 @@ import StudentForm from '../../components/forms/StudentForm';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
+import { getMediaUrl } from '../../utils/formatters';
 
 const StudentDetailPage = () => {
   const { id } = useParams();
@@ -104,7 +105,7 @@ const StudentDetailPage = () => {
   const handleDownloadPhoto = () => {
     const photoUrl = student?.avatar || student?.profile_photo;
     if (!photoUrl) return;
-    const fullUrl = photoUrl.startsWith('http') ? photoUrl : `http://localhost:5000${photoUrl}`;
+    const fullUrl = getMediaUrl(photoUrl);
     const link = document.createElement('a');
     link.href = fullUrl;
     link.download = `student_${student.student_number || student.id}_photo.jpg`;
@@ -131,9 +132,7 @@ const StudentDetailPage = () => {
   }
 
   const rawPhoto = student.avatar || student.profile_photo;
-  const avatarSrc = rawPhoto
-    ? (rawPhoto.startsWith('http') ? rawPhoto : `http://localhost:5000${rawPhoto}`)
-    : null;
+  const avatarSrc = rawPhoto ? getMediaUrl(rawPhoto) : null;
 
   return (
     <div className="space-y-6">

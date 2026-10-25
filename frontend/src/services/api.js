@@ -1,15 +1,60 @@
 import axios from 'axios';
 
-// Use relative /api so requests go through the Vite proxy — avoids CORS issues
-// regardless of whether the user opens localhost or 127.0.0.1
-const BASE_URL = '/api';
+// Resolve public backend base URL:
+// 1. If VITE_API_URL is configured (e.g. in Vercel or .env), use it
+// 2. In production builds, default to deployed Render backend: https://university-management-api-mefq.onrender.com/api
+// 3. In development (Vite dev server), use relative /api to leverage the Vite proxy (http://localhost:5000)
+export const getBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl && typeof envUrl === 'string' && envUrl.trim() !== '') {
+    let clean = envUrl.trim().replace(/\/+$/, '');
+    if (!clean.endsWith('/api')) {
+      clean = `${clean}/api`;
+    }
+    return clean;
+  }
+  if (import.meta.env.PROD) {
+    return 'https://university-management-api-mefq.onrender.com/api';
+  }
+  return '/api';
+};
+
+export const BASE_URL = getBaseUrl();
+
+// Backend root origin (for static file uploads like /uploads/profiles/...)
+export const getBackendOrigin = () => {
+  const baseUrl = getBaseUrl();
+  if (baseUrl.startsWith('http://') || baseUrl.startsWith('https://')) {
+    try {
+      const parsed = new URL(baseUrl);
+      return parsed.origin;
+    } catch {
+      // Fallback below
+    }
+  }
+  if (import.meta.env.PROD) {
+    return 'https://university-management-api-mefq.onrender.com';
+  }
+  return 'http://localhost:5000';
+};
+
+// Helper to convert relative upload path to absolute asset URL
+export const getMediaUrl = (path) => {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:') || path.startsWith('blob:')) {
+    return path;
+  }
+  const origin = getBackendOrigin();
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${origin}${cleanPath}`;
+};
 
 const api = axios.create({
   baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 15000,
+  timeout: 30000,
 });
 
 // Request interceptor: attach JWT token
@@ -36,7 +81,7 @@ api.interceptors.response.use(
       sessionStorage.removeItem('ums_user');
       localStorage.removeItem('ums_token');
       localStorage.removeItem('ums_user');
-      if (window.location.pathname !== '/login') {
+      if (window.location.pathname !== '/login' && window.location.pathname !== '/register-admin') {
         window.location.href = '/login';
       }
     }

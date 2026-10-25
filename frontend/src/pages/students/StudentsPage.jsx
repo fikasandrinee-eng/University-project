@@ -20,6 +20,7 @@ import Badge from '../../components/ui/Badge';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Tooltip from '../../components/ui/Tooltip';
+import { getMediaUrl } from '../../utils/formatters';
 
 const StudentsPage = () => {
   const navigate = useNavigate();
@@ -202,7 +203,7 @@ const StudentsPage = () => {
                           <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden border border-border">
                             {s.avatar || s.profile_photo ? (
                               <img
-                                src={(s.avatar || s.profile_photo).startsWith('http') ? (s.avatar || s.profile_photo) : `http://localhost:5000${s.avatar || s.profile_photo}`}
+                                src={getMediaUrl(s.avatar || s.profile_photo)}
                                 alt={`${s.first_name} ${s.last_name}`}
                                 className="w-full h-full object-cover"
                               />

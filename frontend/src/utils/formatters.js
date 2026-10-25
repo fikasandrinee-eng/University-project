@@ -139,3 +139,5 @@ export const getTimeOfDayGreeting = () => {
   if (hour < 17) return 'Good afternoon';
   return 'Good evening';
 };
+
+export { getMediaUrl, getBackendOrigin } from '../services/api';
