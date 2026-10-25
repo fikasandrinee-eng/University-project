@@ -1,3 +1,4 @@
+const fs = require('fs');
 const mysql = require('mysql2/promise');
 const path = require('path');
 const dotenv = require('dotenv');
@@ -7,6 +8,12 @@ dotenv.config({ path: path.join(__dirname, '..', '.env') });
 dotenv.config({ path: path.join(__dirname, '..', '..', '.env') });
 
 const pool = mysql.createPool({
+ssl: {
+  ca: fs.readFileSync(
+    path.join(__dirname, '..', 'ca.pem')
+  ),
+  rejectUnauthorized: true
+},
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT) || 3306,
   user: process.env.DB_USER || 'root',
@@ -17,6 +24,7 @@ const pool = mysql.createPool({
   queueLimit: 0,
   enableKeepAlive: true,
   keepAliveInitialDelay: 0,
+
 });
 
 // Test connection on startup
