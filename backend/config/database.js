@@ -9,9 +9,8 @@ dotenv.config({ path: path.join(__dirname, '..', '..', '.env') });
 
 const pool = mysql.createPool({
 ssl: {
-  ca: fs.readFileSync(
-    path.join(__dirname, '..', 'ca.pem')
-  ),
+  ca: process.env.AIVEN_CA_CERT ||
+      fs.readFileSync(path.join(__dirname, '..', 'ca.pem')),
   rejectUnauthorized: true
 },
   host: process.env.DB_HOST || 'localhost',
